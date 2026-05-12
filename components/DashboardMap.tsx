@@ -46,22 +46,17 @@ export default function DashboardMap({ pins }: DashboardMapProps) {
     const validPins = pins.filter(pin => {
         const lat = pin.lat || pin.latitude;
         const lng = pin.lng || pin.longitude;
-        const isValid = lat && lng && pin.projectName;
-        console.log('Pin validation:', pin, 'isValid:', isValid);
-        return isValid;
+        return lat && lng && pin.projectName;
     }).map(pin => ({
         projectName: pin.projectName,
         lat: pin.lat || pin.latitude,
         lng: pin.lng || pin.longitude
     }));
 
-    // Debug: Log pins data
-    console.log('DashboardMap pins:', pins);
-    console.log('DashboardMap validPins:', validPins);
-
     return (
         <div className="h-full w-full rounded-md overflow-hidden z-0">
             <MapContainer
+                key={validPins.length}
                 center={center}
                 zoom={6}
                 scrollWheelZoom={true}
