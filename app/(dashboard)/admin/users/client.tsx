@@ -42,7 +42,9 @@ export default function UsersClient({ data }: UsersClientProps) {
     }
 
     const handleRowClick = (user: UserData) => {
-        handleEdit(user)
+        if (user.canEdit) {
+            handleEdit(user)
+        }
     }
 
     // Generate columns with callbacks
@@ -80,34 +82,29 @@ export default function UsersClient({ data }: UsersClientProps) {
                                     </div>
                                 </div>
 
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-40">
-                                        <DropdownMenuLabel>จัดการ</DropdownMenuLabel>
-                                        {user.canEdit && (
+                                {user.canEdit && (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-40">
+                                            <DropdownMenuLabel>จัดการ</DropdownMenuLabel>
                                             <DropdownMenuItem onClick={() => handleEdit(user)}>
                                                 <Pencil className="mr-2 h-4 w-4" /> แก้ไขข้อมูล
                                             </DropdownMenuItem>
-                                        )}
-                                        {!user.isFirstAdmin && !user.isCurrentUser && user.canEdit && (
-                                            <>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(user)}>
-                                                    <Trash2 className="mr-2 h-4 w-4" /> ลบผู้ใช้งาน
-                                                </DropdownMenuItem>
-                                            </>
-                                        )}
-                                        {!user.canEdit && (
-                                            <DropdownMenuItem disabled className="text-muted-foreground text-xs italic">
-                                                คุณไม่มีสิทธิ์จัดการผู้ใช้นี้
-                                            </DropdownMenuItem>
-                                        )}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                            {!user.isFirstAdmin && !user.isCurrentUser && (
+                                                <>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(user)}>
+                                                        <Trash2 className="mr-2 h-4 w-4" /> ลบผู้ใช้งาน
+                                                    </DropdownMenuItem>
+                                                </>
+                                            )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
                             </div>
 
                             <div className="mt-4 grid grid-cols-1 gap-2">
