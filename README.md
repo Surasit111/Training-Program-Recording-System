@@ -35,7 +35,7 @@
 
 ### Geocoding & Interactive Map
 ปักหมุดตำแหน่งโครงการลงบนแผนที่ Leaflet โดยรองรับระบบ Geocoding เพื่อค้นหาพิกัดจากที่อยู่จริง
-![Map View](docs/screenshots/Map.gif)
+![Map View](docs/screenshots/Map.png)
 
 ### Project Life-cycle Management
 ระบบจัดการโครงการที่ครบวงจร ตั้งแต่การบันทึกรหัสโครงการ, ช่วงวันเวลาจัดงาน (Auto-calculate duration), จนถึงการสรุปรายงาน
@@ -43,11 +43,11 @@
 
 ### Excel Data Export
 ระบบส่งออกรายงานโครงการเป็นไฟล์ Excel พร้อมระบบกรองข้อมูลตามเงื่อนไขที่ต้องการ
-![Excel Export](docs/screenshots/Export.gif)
+![Reports and Export](docs/screenshots/Reports.webp)
 
 ### Digital Certificate & Image Gallery
 แกลเลอรีรวบรวมภาพกิจกรรมและคลังเก็บใบประกาศนียบัตรแบบดิจิทัล แยกตามแต่ละโครงการเพื่อความสะดวกในการสืบค้น
-![Gallery](docs/screenshots/Gallery.png)
+![Project Details](docs/screenshots/Details.png)
 
 ---
 
