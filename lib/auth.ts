@@ -60,6 +60,7 @@ export const auth = betterAuth({
     additionalFields: {
       phoneNumber: {
         type: "string",
+        required: false,
       },
     },
   },

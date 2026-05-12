@@ -55,7 +55,7 @@ const REGIONS_DATA = [
 export default function DashboardClient({ userRole, users }: DashboardClientProps) {
     const router = useRouter()
     const [filters, setFilters] = useState({
-        year: new Date().getFullYear().toString(),
+        year: "all",
         startMonth: "1",
         endMonth: "12",
         userId: "all"
@@ -133,10 +133,13 @@ export default function DashboardClient({ userRole, users }: DashboardClientProp
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">ปีที่จัด</label>
                     <Select value={filters.year} onValueChange={(v) => { setFilters(f => ({ ...f, year: v })); setPage(1); }}>
                         <SelectTrigger className="w-full sm:w-32 bg-slate-50 border-slate-100 hover:bg-white transition-colors">
-                            <SelectValue />
+                            <SelectValue placeholder="ทั้งหมด" />
                         </SelectTrigger>
                         <SelectContent position="popper" sideOffset={4}>
-                            {years.map((y: string) => <SelectItem key={y} value={y}>{parseInt(y) + 543}</SelectItem>)}
+                            <SelectItem value="all">ทั้งหมด</SelectItem>
+                            {years.filter(y => y !== "all").map((y: string) => (
+                                <SelectItem key={y} value={y}>{parseInt(y) + 543}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>

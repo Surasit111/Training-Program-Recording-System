@@ -88,7 +88,7 @@ export default function ReportsClient({ userRole, users }: ReportsClientProps) {
     const [selectedColumns, setSelectedColumns] = useState<string[]>(projectsColumns.map(c => c.id))
 
     // Filter State
-    const [year, setYear] = useState<string>(new Date().getFullYear().toString())
+    const [year, setYear] = useState<string>("all")
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [budgetType, setBudgetType] = useState<string>("all")
     const [areaId, setAreaId] = useState<string>("all")
