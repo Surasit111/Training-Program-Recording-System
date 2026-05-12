@@ -50,7 +50,10 @@ export default async function AdminUsersPage() {
   const formattedUsers = users.map(user => ({
     ...user,
     isFirstAdmin: firstAdmin?.id === user.id,
-    isCurrentUser: session.user.id === user.id
+    isCurrentUser: session.user.id === user.id,
+    // Add flags for easier UI logic
+    isSuperAdmin: session.user.id === firstAdmin?.id,
+    canEdit: session.user.id === firstAdmin?.id || (userCheck?.role === "ADMIN" && user.role === "USER")
   }))
 
   return (

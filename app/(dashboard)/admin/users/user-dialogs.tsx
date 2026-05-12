@@ -117,7 +117,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
                     <div className="grid gap-2">
                         <Label htmlFor="role">สิทธิ์การใช้งาน</Label>
                         <Select
-                            disabled={user.isFirstAdmin}
+                            disabled={!user.isSuperAdmin || user.isFirstAdmin}
                             value={formData.role}
                             onValueChange={(v) => setFormData(f => ({ ...f, role: v }))}
                         >
@@ -129,8 +129,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
                                 <SelectItem value="ADMIN">Admin (ผู้ดูแลระบบ)</SelectItem>
                             </SelectContent>
                         </Select>
-                        {user.isFirstAdmin && <p className="text-xs text-red-500 font-medium mt-1">⚠️ ไม่สามารถเปลี่ยนสิทธิ์ของแอดมินคนแรกได้ (เพื่อความปลอดภัยของระบบ)</p>}
-                        {user.isCurrentUser && !user.isFirstAdmin && <p className="text-xs text-orange-500 font-medium mt-1">💡 คุณกำลังเปลี่ยนสิทธิ์ของตัวเอง (โปรดระวังการลดสิทธิ์)</p>}
+                        {user.isFirstAdmin && <p className="text-xs text-red-500 font-medium mt-1">⚠️ แอดมินสูงสุดไม่สามารถเปลี่ยนสิทธิ์ตัวเองได้</p>}
+                        {!user.isSuperAdmin && <p className="text-xs text-orange-500 font-medium mt-1">💡 เฉพาะแอดมินสูงสุดเท่านั้นที่สามารถเปลี่ยนบทบาทผู้ใช้ได้</p>}
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="password">รีเซ็ตรหัสผ่าน (เว้นว่างหากไม่ต้องการเปลี่ยน)</Label>

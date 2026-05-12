@@ -48,14 +48,42 @@ export async function PUT(
             select: { id: true }
         });
 
-        // Prevent changing role of the first admin
-        if (firstAdmin?.id === id && parsedData.role && parsedData.role !== "ADMIN") {
-            return NextResponse.json({ error: "Cannot change role of the first admin" }, { status: 400 });
+        const isSuperAdmin = session.user.id === firstAdmin?.id;
+        const targetUser = await prisma.user.findUnique({
+            where: { id },
+            select: { role: true, id: true }
+        });
+
+        if (!targetUser) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // Prevent changing own role
-        if (session.user.id === id && parsedData.role && parsedData.role !== currentUser?.role) {
-            return NextResponse.json({ error: "Cannot change your own role" }, { status: 400 });
+        // --- HIERARCHY SECURITY RULES ---
+        
+        // 1. If not Super Admin, check restrictions
+        if (!isSuperAdmin) {
+            // Cannot edit Super Admin
+            if (targetUser.id === firstAdmin?.id) {
+                return NextResponse.json({ error: "Secondary admins cannot edit the Super Admin" }, { status: 403 });
+            }
+
+            // Cannot edit other Admins (including self in this management page)
+            if (targetUser.role === "ADMIN") {
+                return NextResponse.json({ error: "Secondary admins cannot edit other admins or themselves" }, { status: 403 });
+            }
+
+            // Cannot change any role
+            if (parsedData.role && parsedData.role !== targetUser.role) {
+                return NextResponse.json({ error: "Secondary admins cannot change user roles" }, { status: 403 });
+            }
+        }
+
+        // 2. Super Admin specific rules
+        if (isSuperAdmin) {
+            // Super Admin cannot change their own role (self-lock protection)
+            if (session.user.id === id && parsedData.role && parsedData.role !== "ADMIN") {
+                return NextResponse.json({ error: "Super Admin cannot change their own role" }, { status: 400 });
+            }
         }
 
         // Update User info
@@ -126,11 +154,6 @@ export async function DELETE(
 
         const { id } = await params;
 
-        // Prevent self-deletion
-        if (id === session.user.id) {
-            return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 });
-        }
-
         // Check if target user is the first admin
         const firstAdmin = await prisma.user.findFirst({
             where: { role: "ADMIN" },
@@ -138,6 +161,33 @@ export async function DELETE(
             select: { id: true }
         });
 
+        const isSuperAdmin = session.user.id === firstAdmin?.id;
+        const targetUser = await prisma.user.findUnique({
+            where: { id },
+            select: { role: true, id: true }
+        });
+
+        if (!targetUser) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        // --- DELETE SECURITY RULES ---
+
+        // 1. Prevent self-deletion for everyone
+        if (id === session.user.id) {
+            return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 });
+        }
+
+        // 2. If not Super Admin, check restrictions
+        if (!isSuperAdmin) {
+            // Cannot delete any ADMIN (Super or Secondary)
+            if (targetUser.role === "ADMIN") {
+                return NextResponse.json({ error: "Secondary admins cannot delete other admins" }, { status: 403 });
+            }
+        }
+
+        // 3. Super Admin cannot delete themselves (already handled in rule 1)
+        // But specifically cannot delete the "First Admin" ID if somehow they changed themselves
         if (firstAdmin?.id === id) {
             return NextResponse.json({ error: "Cannot delete the first admin" }, { status: 400 });
         }

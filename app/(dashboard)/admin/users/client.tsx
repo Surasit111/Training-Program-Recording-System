@@ -88,16 +88,23 @@ export default function UsersClient({ data }: UsersClientProps) {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-40">
                                         <DropdownMenuLabel>จัดการ</DropdownMenuLabel>
-                                        <DropdownMenuItem onClick={() => handleEdit(user)}>
-                                            <Pencil className="mr-2 h-4 w-4" /> แก้ไขข้อมูล
-                                        </DropdownMenuItem>
-                                        {!user.isFirstAdmin && !user.isCurrentUser && (
+                                        {user.canEdit && (
+                                            <DropdownMenuItem onClick={() => handleEdit(user)}>
+                                                <Pencil className="mr-2 h-4 w-4" /> แก้ไขข้อมูล
+                                            </DropdownMenuItem>
+                                        )}
+                                        {!user.isFirstAdmin && !user.isCurrentUser && user.canEdit && (
                                             <>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(user)}>
                                                     <Trash2 className="mr-2 h-4 w-4" /> ลบผู้ใช้งาน
                                                 </DropdownMenuItem>
                                             </>
+                                        )}
+                                        {!user.canEdit && (
+                                            <DropdownMenuItem disabled className="text-muted-foreground text-xs italic">
+                                                คุณไม่มีสิทธิ์จัดการผู้ใช้นี้
+                                            </DropdownMenuItem>
                                         )}
                                     </DropdownMenuContent>
                                 </DropdownMenu>

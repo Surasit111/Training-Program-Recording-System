@@ -26,6 +26,8 @@ export type UserData = {
   createdAt: Date
   isFirstAdmin?: boolean
   isCurrentUser?: boolean
+  isSuperAdmin?: boolean
+  canEdit?: boolean
 }
 
 interface ActionsCellProps {
@@ -44,13 +46,15 @@ const ActionsCell = ({ user, onEdit, onDelete }: ActionsCellProps) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>จัดการ</DropdownMenuLabel>
-        <DropdownMenuItem className="cursor-pointer" onClick={(e) => {
-          e.stopPropagation()
-          onEdit(user)
-        }}>
-          <Pencil className="mr-2 h-4 w-4" /> แก้ไขข้อมูล
-        </DropdownMenuItem>
-        {!user.isFirstAdmin && !user.isCurrentUser && (
+        {user.canEdit && (
+          <DropdownMenuItem className="cursor-pointer" onClick={(e) => {
+            e.stopPropagation()
+            onEdit(user)
+          }}>
+            <Pencil className="mr-2 h-4 w-4" /> แก้ไขข้อมูล
+          </DropdownMenuItem>
+        )}
+        {!user.isFirstAdmin && !user.isCurrentUser && user.canEdit && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-red-600 cursor-pointer" onClick={(e) => {
@@ -60,6 +64,11 @@ const ActionsCell = ({ user, onEdit, onDelete }: ActionsCellProps) => {
               <Trash2 className="mr-2 h-4 w-4" /> ลบผู้ใช้งาน
             </DropdownMenuItem>
           </>
+        )}
+        {!user.canEdit && (
+          <DropdownMenuItem disabled className="text-muted-foreground text-xs italic">
+            คุณไม่มีสิทธิ์จัดการผู้ใช้นี้
+          </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
