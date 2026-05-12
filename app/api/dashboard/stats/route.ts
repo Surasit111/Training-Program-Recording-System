@@ -35,7 +35,7 @@ export async function GET(req: Request) {
         }
 
         // Date filtering
-        if (year) {
+        if (year && year !== "all") {
             const startM = startMonth ? parseInt(startMonth) - 1 : 0;
             const endM = endMonth ? parseInt(endMonth) : 12;
 
@@ -80,9 +80,16 @@ export async function GET(req: Request) {
         const areas = await prisma.trainingArea.findMany();
         const areaMap = Object.fromEntries(areas.map(a => [a.id, a.name]));
 
-        const formattedAreaBreakdown = areaBreakdown.map(item => ({
-            name: areaMap[item.areaId] || "Unknown",
-            count: item._count.id
+        // Group by name to avoid duplicates if multiple IDs have the same name
+        const areaNameCounts: Record<string, number> = {};
+        areaBreakdown.forEach(item => {
+            const name = areaMap[item.areaId] || "Unknown";
+            areaNameCounts[name] = (areaNameCounts[name] || 0) + item._count.id;
+        });
+
+        const formattedAreaBreakdown = Object.entries(areaNameCounts).map(([name, count]) => ({
+            name,
+            count
         }));
 
         // 5. Province Breakdown

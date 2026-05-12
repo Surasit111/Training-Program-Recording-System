@@ -203,8 +203,8 @@ export default function DashboardClient({ userRole, users }: DashboardClientProp
                         <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                     </CardHeader>
                     <CardContent className="h-16 sm:h-20 overflow-y-auto custom-scrollbar">
-                        {(data?.budgetBreakdown || []).map((b) => (
-                            <div key={b.budgetType} className="flex justify-between text-xs sm:text-sm py-1 border-b border-green-100/50 last:border-0">
+                        {(data?.budgetBreakdown || []).map((b, i) => (
+                            <div key={`${b.budgetType}-${i}`} className="flex justify-between text-xs sm:text-sm py-1 border-b border-green-100/50 last:border-0">
                                 <span className="text-green-700 font-medium">{b.budgetType}</span>
                                 <span className="font-bold text-green-900">{b._count.id}</span>
                             </div>
@@ -221,8 +221,8 @@ export default function DashboardClient({ userRole, users }: DashboardClientProp
                         <Car className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                     </CardHeader>
                     <CardContent className="h-16 sm:h-20 overflow-y-auto custom-scrollbar">
-                        {(data?.transportBreakdown || []).map((t) => (
-                            <div key={t.transportMethod || "No data"} className="flex justify-between text-xs sm:text-sm py-1 border-b border-purple-100/50 last:border-0">
+                        {(data?.transportBreakdown || []).map((t, i) => (
+                            <div key={`${t.transportMethod || 'none'}-${i}`} className="flex justify-between text-xs sm:text-sm py-1 border-b border-purple-100/50 last:border-0">
                                 <span className="text-purple-700 font-medium">{t.transportMethod || "ไม่ได้ระบุ"}</span>
                                 <span className="font-bold text-purple-900">{t._count.id}</span>
                             </div>
@@ -239,8 +239,8 @@ export default function DashboardClient({ userRole, users }: DashboardClientProp
                         <MapIcon className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
                     </CardHeader>
                     <CardContent className="h-16 sm:h-20 overflow-y-auto custom-scrollbar">
-                        {(data?.areaBreakdown || []).map((a) => (
-                            <div key={a.name} className="flex justify-between text-xs sm:text-sm py-1 border-b border-orange-100/50 last:border-0">
+                        {(data?.areaBreakdown || []).map((a, i) => (
+                            <div key={`${a.name}-${i}`} className="flex justify-between text-xs sm:text-sm py-1 border-b border-orange-100/50 last:border-0">
                                 <span className="text-orange-700 font-medium">{a.name}</span>
                                 <span className="font-bold text-orange-900">{a.count}</span>
                             </div>
