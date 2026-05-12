@@ -89,9 +89,7 @@ export default function DashboardClient({ userRole, users }: DashboardClientProp
     const [loading, setLoading] = useState(true)
 
     // Use dynamic years from API, fallback to current year + prev 4 years if empty
-    const years = data?.distinctYears && data.distinctYears.length > 0
-        ? data.distinctYears.map(String)
-        : Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - i).toString())
+    const years = (data?.distinctYears || []).map(String)
     const months = Array.from({ length: 12 }, (_, i) => ({ value: (i + 1).toString(), label: format(new Date(2024, i, 1), "MMMM", { locale: th }) }))
 
     const fetchData = useCallback(async () => {

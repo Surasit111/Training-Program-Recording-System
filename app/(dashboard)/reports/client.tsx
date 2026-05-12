@@ -340,16 +340,9 @@ export default function ReportsClient({ userRole, users }: ReportsClientProps) {
                                             </SelectTrigger>
                                             <SelectContent position="popper" align="start">
                                                 <SelectItem value="all">ทั้งหมด</SelectItem>
-                                                {years.length > 0 ? (
-                                                    years.map((y) => (
-                                                        <SelectItem key={y} value={y}>{parseInt(y) + 543}</SelectItem>
-                                                    ))
-                                                ) : (
-                                                    // Default years fallbacks
-                                                    Array.from({ length: 3 }, (_, i) => new Date().getFullYear() - i).map(y => (
-                                                        <SelectItem key={y} value={y.toString()}>{y + 543}</SelectItem>
-                                                    ))
-                                                )}
+                                                {years.map((y) => (
+                                                    <SelectItem key={y} value={y}>{parseInt(y) + 543}</SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>

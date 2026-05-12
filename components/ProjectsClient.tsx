@@ -126,9 +126,7 @@ export default function ProjectsClient({ userRole, users }: ProjectsClientProps)
     }, [fetchData])
 
     // Use dynamic years if available, else default
-    const years = yearOptions.length > 0
-        ? yearOptions
-        : Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - i).toString())
+    const years = yearOptions.map(String)
 
     const months = Array.from({ length: 12 }, (_, i) => ({
         value: (i + 1).toString(),
