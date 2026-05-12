@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Train Management System (TMS)
 
-## Getting Started
+> ระบบบริหารจัดการโครงการฝึกอบรมและสถิติอัจฉริยะ — ติดตามโครงการ, วิเคราะห์งบประมาณตามประเภท, และระบุตำแหน่งพื้นที่ฝึกอบรมทั่วประเทศไทยแบบ Interactive
 
-First, run the development server:
+[![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.3-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-7.3.0-2D3748?style=flat-square&logo=prisma)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-4-06B6D4?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## -------------------------------------------------------------------
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+🔗 **[Live Demo](https://train-management-system-demo.vercel.app)**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## -------------------------------------------------------------------
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Demo Credentials
 
-## Learn More
+| Role | Email | Password |
+|---|---|---|
+| **Administrator** | `admin@gmail.com` | `123456789` |
+| **General User** | `user@gmail.com` | `123456789` |
 
-To learn more about Next.js, take a look at the following resources:
+> [!NOTE]
+> ระบบมีการแยกสิทธิ์ชัดเจน: **Admin** จัดการโครงสร้างข้อมูลหลัก (พื้นที่, งบประมาณ, พาหนะ) และผู้ใช้งาน **User** จัดการบันทึกและติดตามโครงการฝึกอบรม
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Screenshots & Demos
 
-## Deploy on Vercel
+### Advanced Analytics Dashboard
+หน้าแรกสรุปข้อมูลสถิติที่สำคัญ พร้อมกราฟ Recharts แสดงสัดส่วนงบประมาณและจำนวนโครงการแยกตามพื้นที่
+![Dashboard](docs/screenshots/Dashboard.png)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Geocoding & Interactive Map
+ปักหมุดตำแหน่งโครงการลงบนแผนที่ Leaflet โดยรองรับระบบ Geocoding เพื่อค้นหาพิกัดจากที่อยู่จริง
+![Map View](docs/screenshots/Map.gif)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Project Life-cycle Management
+ระบบจัดการโครงการที่ครบวงจร ตั้งแต่การบันทึกรหัสโครงการ, ช่วงวันเวลาจัดงาน (Auto-calculate duration), จนถึงการสรุปรายงาน
+![Project Management](docs/screenshots/Projects.png)
+
+### Excel Data Export
+ระบบส่งออกรายงานโครงการเป็นไฟล์ Excel พร้อมระบบกรองข้อมูลตามเงื่อนไขที่ต้องการ
+![Excel Export](docs/screenshots/Export.gif)
+
+### Digital Certificate & Image Gallery
+แกลเลอรีรวบรวมภาพกิจกรรมและคลังเก็บใบประกาศนียบัตรแบบดิจิทัล แยกตามแต่ละโครงการเพื่อความสะดวกในการสืบค้น
+![Gallery](docs/screenshots/Gallery.png)
+
+---
+
+## Key Features
+
+| Feature | รายละเอียด |
+|---|---|
+| **Training Project Tracking** | บันทึกและจัดการโครงการฝึกอบรมอย่างเป็นระบบ พร้อมระบบคำนวณจำนวนวันอัตโนมัติ |
+| **Smart Geocoding Map** | ระบุพิกัดโครงการบนแผนที่ Interactive รองรับการแสดงผลรายโครงการและภาพรวมทั้งระบบ |
+| **Budget Categorization** | วิเคราะห์และติดตามงบประมาณแยกตามประเภท (Budget Types) เพื่อความโปร่งใส |
+| **Excel Data Export** | ระบบส่งออกรายงานโครงการเป็นไฟล์ Excel พร้อมระบบกรองข้อมูลตามเงื่อนไขที่ต้องการ |
+| **Rich Media Storage** | ระบบจัดเก็บรูปภาพโครงการและใบประกาศนียบัตร (Certificates) ในรูปแบบ Digital Assets |
+| **Complex Reporting** | ระบบรายงานขั้นสูงที่สามารถวิเคราะห์สถิติและแสดงผลในรูปแบบกราฟ (Charts) |
+| **User Profile & Security** | จัดการข้อมูลส่วนตัวและระบบเปลี่ยนรหัสผ่าน พร้อมการรักษาความปลอดภัยด้วย Better-Auth |
+| **Enterprise RBAC** | ควบคุมสิทธิ์การเข้าถึงข้อมูลตามบทบาทของผู้ใช้งาน (Admin / User) อย่างเข้มงวด |
+
+---
+
+## Tech Stack & Rationale
+
+| Technology | Version | เหตุผลที่เลือก |
+|---|---|---|
+| **Next.js** (App Router) | 16.1.6 | ใช้ประสิทธิภาพสูงสุดของ Server Components และ Route Handlers |
+| **React** | 19.2.3 | รองรับ Features ใหม่ๆ และการจัดการ UI ที่ซับซ้อนในหน้า Reports |
+| **Prisma ORM** | 7.3.0 | มั่นใจเรื่อง Type-safety ของข้อมูลโครงการและความสัมพันธ์ของหมวดหมู่ต่างๆ |
+| **PostgreSQL** | 16 | ฐานข้อมูลประสิทธิภาพสูง รองรับ Query ข้อมูลรายงานที่มีความซับซ้อน |
+| **Better-Auth** | 1.4.18 | ระบบจัดการความปลอดภัยและ Session ที่ทันสมัยและยืดหยุ่น |
+| **Supabase** | Cloud | โซลูชัน Backend สำหรับ Database และ Storage ที่เสถียรและขยายตัวได้ง่าย |
+| **Vercel** | Edge | Deployment Platform — รองรับ Edge Functions และ ISR สำหรับความเร็วสูงสุด |
+
+---
+
+## User Roles & Permissions
+
+| สิทธิ์การใช้งาน | Admin | User |
+|---|:---:|:---:|
+| ดูและค้นหาโครงการทั้งหมด | ✅ | ✅ |
+| เพิ่ม/แก้ไขข้อมูลโครงการของตนเอง | ✅ | ✅ |
+| ดูรายงานและสถิติภาพรวม | ✅ | ✅ |
+| ส่งออกรายงานเป็นไฟล์ Excel | ✅ | ✅ |
+| จัดการข้อมูลพื้นที่ (Training Areas) | ✅ | ❌ |
+| จัดการประเภทงบประมาณ (Budget Types) | ✅ | ❌ |
+| จัดการวิธีการเดินทาง (Transport Methods) | ✅ | ❌ |
+| จัดการผู้ใช้งานและระดับสิทธิ์ | ✅ | ❌ |
+
+---
+
+## About the Developer
+
+**คุณสุรสิทธิ์ พิมพ์สีดา (Surasit Phimseeda)**
+
+- [surasit.phimseeda111@gmail.com](mailto:surasit.phimseeda111@gmail.com)
+- [github.com/Surasit111](https://github.com/Surasit111)
+
+---
+
+## License
+
+This project is proprietary software. All rights reserved.
+
+---
+
+*Developed with ❤️ for excellence in Training Management.*

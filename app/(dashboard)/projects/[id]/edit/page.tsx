@@ -1,0 +1,616 @@
+"use client"
+
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { projectSchema } from "@/schemas/project-schema"
+import { z } from "zod"
+import { useRouter, useParams } from "next/navigation"
+import { useState, useEffect, ChangeEvent } from "react"
+import { format } from "date-fns"
+import { th } from "date-fns/locale"
+import { CalendarIcon, Loader2, UploadCloud, X, FileText, MapPin, ArrowLeft } from "lucide-react"
+import { useToast } from "@/components/ui/toast"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Image from "next/image"
+import Link from "next/link"
+
+// Import MapPicker component
+import dynamic from 'next/dynamic'
+const MapPicker = dynamic(() => import("@/components/MapPicker"), {
+    ssr: false,
+    loading: () => <div className="h-64 w-full bg-gray-100 animate-pulse rounded-md flex items-center justify-center">กำลังโหลดแผนที่...</div>
+})
+
+interface TrainingArea {
+    id: string
+    name: string
+}
+
+interface BudgetType {
+    id: string
+    name: string
+}
+
+interface TransportMethod {
+    id: string
+    name: string
+}
+
+export default function EditProjectPage() {
+    const { addToast } = useToast()
+    const router = useRouter()
+    const params = useParams()
+    const projectId = params.id as string
+
+    const [loading, setLoading] = useState(false)
+    const [fetching, setFetching] = useState(true)
+
+    const [areas, setAreas] = useState<TrainingArea[]>([])
+    const [budgetTypes, setBudgetTypes] = useState<BudgetType[]>([])
+    const [transportMethods, setTransportMethods] = useState<TransportMethod[]>([])
+    const [uploadingImage, setUploadingImage] = useState(false)
+    const [uploadingCert, setUploadingCert] = useState(false)
+    const [imageUrls, setImageUrls] = useState<string[]>([])
+    const [certUrls, setCertUrls] = useState<string[]>([])
+
+    const form = useForm<z.infer<typeof projectSchema>>({
+        resolver: zodResolver(projectSchema),
+        defaultValues: {
+            projectName: "",
+            projectCode: "",
+            areaId: "",
+            budgetType: "",
+            transportMethod: "",
+            province: "",
+            locationDetail: "",
+            description: "",
+            projectImages: [],
+            certificates: [],
+        },
+    })
+
+    // Fetch areas and project data
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                // Fetch areas and budgets
+                const [areasRes, budgetsRes, transportRes] = await Promise.all([
+                    fetch("/api/areas"),
+                    fetch("/api/budget-types"),
+                    fetch("/api/transport-methods")
+                ])
+
+                if (areasRes.ok) {
+                    const areasData = await areasRes.json()
+                    setAreas(areasData.areas)
+                }
+
+                if (budgetsRes.ok) {
+                    const budgetData = await budgetsRes.json()
+                    setBudgetTypes(budgetData.budgetTypes)
+                }
+
+                if (transportRes.ok) {
+                    const transportData = await transportRes.json()
+                    setTransportMethods(transportData.transportMethods)
+                }
+
+                // Fetch project
+                const projectRes = await fetch(`/api/projects/${projectId}`)
+                if (projectRes.ok) {
+                    const projectData = await projectRes.json()
+                    const p = projectData.project
+
+                    form.reset({
+                        projectName: p.projectName,
+                        projectCode: p.projectCode,
+                        areaId: p.areaId,
+                        budgetType: p.budgetType,
+                        transportMethod: p.transportMethod || "",
+                        province: p.province,
+                        locationDetail: p.locationDetail,
+                        description: p.description || "",
+                        latitude: p.latitude || undefined,
+                        longitude: p.longitude || undefined,
+                        district: p.district || "",
+                        provinceFromMap: p.provinceFromMap || "",
+                        dateRange: {
+                            from: new Date(p.startDate),
+                            to: new Date(p.endDate),
+                        }
+                    })
+
+                    setImageUrls(Array.isArray(p.projectImages) ? p.projectImages : [])
+                    setCertUrls(Array.isArray(p.certificates) ? p.certificates : [])
+                }
+            } catch (error) {
+                console.error("Failed to fetch data:", error)
+                addToast({ title: "ไม่สามารถโหลดข้อมูลโครงการได้", type: "error" })
+            } finally {
+                setFetching(false)
+            }
+        }
+        fetchData()
+    }, [projectId, form, addToast])
+
+    // Handle Multi-image upload
+    const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files
+        if (!files || files.length === 0) return
+
+        setUploadingImage(true)
+        try {
+            const uploaded: string[] = []
+            for (let i = 0; i < files.length; i++) {
+                const formData = new FormData()
+                formData.append("file", files[i])
+                const res = await fetch("/api/upload", { method: "POST", body: formData })
+                if (res.ok) {
+                    const data = await res.json()
+                    uploaded.push(data.url)
+                }
+            }
+            setImageUrls(prev => [...prev, ...uploaded])
+        } catch (error) {
+            console.error("Image Upload Error:", error)
+            addToast({ title: "อัปโหลดรูปไม่สำเร็จ", type: "error" })
+        } finally {
+            setUploadingImage(false)
+        }
+    }
+
+    // Handle Certificates upload
+    const handleCertUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files
+        if (!files || files.length === 0) return
+
+        setUploadingCert(true)
+        try {
+            const uploaded: string[] = []
+            for (let i = 0; i < files.length; i++) {
+                const formData = new FormData()
+                formData.append("file", files[i])
+                const res = await fetch("/api/upload", { method: "POST", body: formData })
+                if (res.ok) {
+                    const data = await res.json()
+                    uploaded.push(data.url)
+                }
+            }
+            setCertUrls(prev => [...prev, ...uploaded])
+        } catch (error) {
+            console.error("Cert Upload Error:", error)
+            addToast({ title: "อัปโหลดไฟล์ไม่สำเร็จ", type: "error" })
+        } finally {
+            setUploadingCert(false)
+        }
+    }
+
+    const removeImage = (url: string) => {
+        setImageUrls(prev => prev.filter(u => u !== url))
+    }
+
+    const removeCert = (url: string) => {
+        setCertUrls(prev => prev.filter(u => u !== url))
+    }
+
+    async function onSubmit(values: z.infer<typeof projectSchema>) {
+        setLoading(true)
+
+        const payload = {
+            ...values,
+            projectImages: imageUrls,
+            certificates: certUrls,
+        }
+
+        try {
+            const res = await fetch(`/api/projects/${projectId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            })
+
+            if (!res.ok) {
+                const errorData = await res.json()
+                throw new Error(errorData.error || "เกิดข้อผิดพลาดในการบันทึก")
+            }
+
+            addToast({ title: "อัปเดตโครงการเรียบร้อย!", type: "success" })
+            router.push(`/projects/${projectId}`)
+            router.refresh()
+        } catch (error) {
+            addToast({ title: error instanceof Error ? error.message : "เกิดข้อผิดพลาด", type: "error" })
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    if (fetching) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen gap-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-muted-foreground">กำลังโหลดข้อมูลโครงการ...</p>
+            </div>
+        )
+    }
+
+    return (
+        <div className="max-w-4xl mx-auto py-6">
+            <div className="mb-6">
+                <Link href={`/projects/${projectId}`}>
+                    <Button variant="ghost" className="gap-2">
+                        <ArrowLeft className="h-4 w-4" /> ยกเลิกและกลับไปที่รายละเอียด
+                    </Button>
+                </Link>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-2xl">แก้ไขโครงการอบรม</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+
+                            {/* Section 1: ข้อมูลพื้นฐาน */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold flex items-center gap-2 border-b pb-2">
+                                    <FileText className="h-5 w-5" /> ข้อมูลโครงการ
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="projectName"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>ชื่อโครงการ</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="เช่น อบรมการใช้ AI เบื้องต้น" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="projectCode"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>หมายเลขโครงการ</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="เช่น P-2024-001" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="budgetType"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>ประเภทงบประมาณ</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="เลือกประเภทงบประมาณ" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent position="popper">
+                                                        {budgetTypes.map((type) => (
+                                                            <SelectItem key={type.id} value={type.name}>{type.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="areaId"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>พื้นที่อบรม</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="เลือกพื้นที่อบรม" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent position="popper">
+                                                        {areas.map((area) => (
+                                                            <SelectItem key={area.id} value={area.id}>{area.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="dateRange"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-col">
+                                                <FormLabel>วันเริ่มต้น - วันสิ้นสุด</FormLabel>
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <Button
+                                                            variant={"outline"}
+                                                            className={cn(
+                                                                "w-full justify-start text-left font-normal",
+                                                                !field.value && "text-muted-foreground"
+                                                            )}
+                                                        >
+                                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                                            {field.value?.from ? (
+                                                                field.value.to ? (
+                                                                    <>
+                                                                        {format(field.value.from, "dd MMM yyyy", { locale: th })} -{" "}
+                                                                        {format(field.value.to, "dd MMM yyyy", { locale: th })}
+                                                                    </>
+                                                                ) : (
+                                                                    format(field.value.from, "dd MMM yyyy", { locale: th })
+                                                                )
+                                                            ) : (
+                                                                <span>เลือกช่วงเวลาการอบรม</span>
+                                                            )}
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-auto p-0" align="start" side="bottom">
+                                                        <Calendar
+                                                            initialFocus
+                                                            mode="range"
+                                                            defaultMonth={field.value?.from}
+                                                            selected={field.value}
+                                                            onSelect={field.onChange}
+                                                            numberOfMonths={2}
+                                                            locale={th}
+                                                        />
+                                                    </PopoverContent>
+                                                </Popover>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="transportMethod"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>การเดินทาง (ระบุพาหนะ)</FormLabel>
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="เลือกพาหนะในการเดินทาง" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent position="popper">
+                                                        {transportMethods.map((t) => (
+                                                            <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+
+                                <FormField
+                                    control={form.control}
+                                    name="description"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>รายละเอียดโครงการเพิ่มเติม (ถ้ามี)</FormLabel>
+                                            <FormControl>
+                                                <Textarea placeholder="รายละเอียดอื่นๆ..." {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            {/* Section 2: แผนที่และสถานที่ */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold flex items-center gap-2 border-b pb-2">
+                                    <MapPin className="h-5 w-5" /> สถานที่จัดโครงการ
+                                </h3>
+
+                                <MapPicker
+                                    latitude={form.getValues("latitude")}
+                                    longitude={form.getValues("longitude")}
+                                    onChange={(coords) => {
+                                        form.setValue("latitude", coords.latitude)
+                                        form.setValue("longitude", coords.longitude)
+                                        if (coords.province) {
+                                            form.setValue("province", coords.province)
+                                            form.setValue("provinceFromMap", coords.province)
+                                        }
+                                        if (coords.district) {
+                                            form.setValue("district", coords.district)
+                                        }
+                                    }}
+                                />
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="province"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>จังหวัด</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="จะถูกเติมอัตโนมัติเมื่อเลือกในแผนที่"
+                                                        {...field}
+                                                        readOnly
+                                                        className="bg-muted cursor-not-allowed"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="locationDetail"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>สถานที่จัด (รายละเอียดเพิ่มเติม)</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="เช่น โรงแรม, อาคาร..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Section 3: อัปโหลดไฟล์ */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-6">
+                                {/* รูปภาพ */}
+                                <div className="space-y-4">
+                                    <FormLabel className="text-base">รูปภาพเข้าร่วมโครงการ</FormLabel>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {imageUrls.map((url) => {
+                                            const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
+                                            return (
+                                                <div key={url} className="relative aspect-video rounded-lg overflow-hidden border bg-slate-50 group">
+                                                    {isImage ? (
+                                                        <Image src={url} alt="Project" fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover" unoptimized />
+                                                    ) : (
+                                                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-2 text-center w-full">
+                                                            <FileText className="h-8 w-8 mb-2" />
+                                                            <span className="text-xs break-all line-clamp-2 px-2">{url.split('/').pop()}</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Link wrapper for non-images to open in new tab */}
+                                                    {!isImage && (
+                                                        <a href={url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" />
+                                                    )}
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeImage(url); }}
+                                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            )
+                                        })}
+                                        <label className="flex flex-col items-center justify-center aspect-video border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            {uploadingImage ? (
+                                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                            ) : (
+                                                <>
+                                                    <UploadCloud className="h-6 w-6 text-gray-400" />
+                                                    <span className="text-xs text-gray-500 mt-1">รูปภาพ / ไฟล์</span>
+                                                </>
+                                            )}
+                                            <input type="file" className="hidden" multiple onChange={handleImageUpload} disabled={uploadingImage} />
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* เกียรติบัตร/เอกสาร */}
+                                <div className="space-y-4">
+                                    <FormLabel className="text-base">ใบรับรอง/เกียรติบัตร</FormLabel>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {certUrls.map((url) => {
+                                            const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
+                                            return (
+                                                <div key={url} className="relative aspect-video rounded-lg overflow-hidden border bg-slate-50 group">
+                                                    {isImage ? (
+                                                        <Image src={url} alt="Certificate" fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover" unoptimized />
+                                                    ) : (
+                                                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-2 text-center w-full">
+                                                            <FileText className="h-8 w-8 mb-2" />
+                                                            <span className="text-xs break-all line-clamp-2 px-2">{url.split('/').pop()}</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Link wrapper for non-images to open in new tab */}
+                                                    {!isImage && (
+                                                        <a href={url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" />
+                                                    )}
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeCert(url); }}
+                                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            )
+                                        })}
+                                        <label className="flex flex-col items-center justify-center aspect-video border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            {uploadingCert ? (
+                                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                            ) : (
+                                                <>
+                                                    <UploadCloud className="h-6 w-6 text-gray-400" />
+                                                    <span className="text-xs text-gray-500 mt-1">อัปโหลดไฟล์</span>
+                                                </>
+                                            )}
+                                            <input type="file" className="hidden" multiple onChange={handleCertUpload} disabled={uploadingCert} />
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-end gap-4 border-t pt-6">
+                                <Button type="button" variant="outline" onClick={() => router.back()}>ยกเลิก</Button>
+                                <Button type="submit" disabled={loading} className="px-8 font-semibold">
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            กำลังเซฟ...
+                                        </>
+                                    ) : "บันทึกการแก้ไข"}
+                                </Button>
+                            </div>
+                        </form>
+                    </Form>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
